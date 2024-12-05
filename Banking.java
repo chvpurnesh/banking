@@ -14,6 +14,10 @@ public class Banking {
 		int bal=0;
 		int sum = 0;
 		Scanner Sc = new Scanner(System.in);
+		System.out.println("enter username:");
+		String Username = Sc.nextLine();
+		System.out.println("Enter Password:");
+		String password = Sc.nextLine();
 		System.out.println("enter account number:");
 		String num = Sc.nextLine();
 
