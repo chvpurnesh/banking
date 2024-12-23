@@ -8,7 +8,7 @@ import java.io.IOException;
 public class CheckBalance{
 	
 
-	public static  String checkBal(int sum,int bal,String file) throws NumberFormatException, IOException
+	public String checkBal(int sum,int bal,String file) throws NumberFormatException, IOException
 	{
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			 String line;
