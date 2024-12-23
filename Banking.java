@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class Banking {
 	public static void main(String args[]) {
-		String file = "C:\\Users\\purnesh\\Desktop/account.txt";
+		String file = "../account.txt";
 		int bal=0;
 		int sum = 0;
 		Scanner Sc = new Scanner(System.in);
