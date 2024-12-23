@@ -55,7 +55,8 @@ public class Banking {
 
 			case "B": {
 				try {
-					CheckBalance.checkBal(sum, bal, file);
+					CheckBalance c = new CheckBalance();
+					c.checkBal(sum, bal, file);
 					break;
 				} catch (Exception e) {
 					e.printStackTrace();
