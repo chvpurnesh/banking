@@ -1,31 +1,33 @@
 package Banking;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class CheckBalance 
-{
+public class CheckBalance{
 	
 
-	public static  String checkBal(int sum,int bal,String file) throws NumberFormatException, IOException {
+	public  String checkBal(String accountnumber,String file) throws NumberFormatException, IOException
+	{
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			 String line;
 			  
 			 while ((line = reader.readLine()) != null)
 			 {
 				
-				 bal = Integer.parseInt(line);
-				 sum = sum + bal; 
+				String arr[] = line.split(",");
+				if(arr[2].equals(accountnumber))
+				{
+					return arr[3];
+				}
 			 }
-			 if(sum == 0)
-			 {
-				 System.out.println("There is no deposit for this account");
-			 }
-			 System.out.println("your balance is "+sum);
-			return String.valueOf(sum);
+			 return " ";
+			
 	}
 }
+
+
 
 
 
