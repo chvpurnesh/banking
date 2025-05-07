@@ -1,1 +1,3 @@
-
+username, password, account number, balance
+sample,pw1,10110,500
+sample2,pw2,102201,1000
