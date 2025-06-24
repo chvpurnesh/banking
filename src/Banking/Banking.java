@@ -1,209 +1,146 @@
 package Banking;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.sql.*;
 import java.util.Scanner;
 
 public class Banking {
-	public static void main(String args[]) {
-		String accountfile = "config\\account.txt";
-		int bal = 0;
-		int sum = 0; 
-		Scanner Sc = new Scanner(System.in);
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
 
-		System.out.println("enter username:");
-		String Username = Sc.nextLine();
- 
-		System.out.println("Enter Password:");
-		String password = Sc.nextLine();
-		
+        String username, password, accountnumber;
 
-		System.out.println("enter account number:");
-		String accountnumber = Sc.nextLine();
+        // Login loop
+        while (true) {
+            System.out.println("Enter username:");
+            username = sc.nextLine();
 
-		Banking bsession = new Banking();
+            System.out.println("Enter password:");
+            password = sc.nextLine();
 
-		while (true) {
-			if (bsession.UserValidationCredantials(accountfile, Username, password, accountnumber) == true)
-			{
-				break;
-			}// validateCredentials if block end
-			else {
-                 
-				System.out.println("your credentials did not match please re enter your details");
-				
-				Sc = new Scanner(System.in);
+            System.out.println("Enter account number:");
+            accountnumber = sc.nextLine();
 
-				System.out.println("enter username:");
-				Username = Sc.nextLine();
+            Banking bsession = new Banking();
+            if (bsession.UserValidationCredantials(username, password, accountnumber)) {
+                break;
+            } else {
+                System.out.println("Your credentials did not match. Please try again.\n");
+            }
+        }// login while loop block end
 
-				System.out.println("Enter Password:");
-				password = Sc.nextLine();
+        Banking bsession = new Banking();
 
-				System.out.println("enter account number:");
-				accountnumber = Sc.nextLine();
-			}// validate credentials else block end 
+        // Main menu loop
+        while (true) {
+            System.out.println("\nChoose an option:");
+            System.out.println("A) Deposit");
+            System.out.println("B) Check Balance");
+            System.out.println("Q) Quit");
 
-		}// validate credentials while loop end
+            String option = sc.nextLine().toUpperCase();
 
-		while (true) {
-			System.out.println(
-					"Welcome,please let us know what you want to perform: A)For Deposit B)For Balance checking");
+            switch (option) {
+                case "A":
+                    int depositAmt = bsession.ValidateDepositAmount();
+                    if (bsession.depositAmount(accountnumber, depositAmt)) {
+                        System.out.println("Deposit successful! Amount deposited: " + depositAmt);
+                    } else {
+                        System.out.println("Deposit failed. Please try again.");
+                    }
+                    break;
 
-			String option = Sc.nextLine();
+                case "B":
+                	CheckBalance c = new CheckBalance();
+                    String balance = c.checkBal(accountnumber);
+                    System.out.println("Your balance: " + balance);
+                    break;
 
-			switch (option) {
-			case "A":
-				bsession.ValidateDepositAmount();
-				/* if (bsession.depositAmount(accountfile, accountnumber, String.valueOf(depositAmount)))
-				  {
-                      System.out.println("Deposit successful! Amount deposited: " + depositAmount);
-                  } else 
-                  {
-                      System.out.println("Deposit failed. Please try again.");
-                  }
-                  break;*/
-				
+                case "Q":
+                    System.out.println("Thank you for using our banking system.");
+                    sc.close();
+                    System.exit(0);
+                    break;
 
-			case "B": 
-				
-				try {
+                default:
+                    System.out.println("Invalid option. Please choose A, B, or Q.");
+            }//switch case block end
+        }
+    }//main menu while loop block end
 
-					CheckBalance c = new CheckBalance();
-					String balance = c.checkBal(accountnumber, accountfile);
-					System.out.println("your balance: "+balance);
-					break;
-				} 
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}//switch block end
+    // Validate login credentials using JDBC
+    public boolean UserValidationCredantials(String username, String password, String accountnumber) 
+    {
+        try (Connection conn = DBUtil.getConnection())
+        {
+            String sql = "SELECT * FROM accounts WHERE username = ? AND password = ? AND account_number = ?";
+            var ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            ps.setString(2, password);
+            ps.setString(3, accountnumber);
+            var rs = ps.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }// uservalidatecrendantials method block end
 
-				sum = 0;
+    // Deposit logic using JDBC
+    private boolean depositAmount(String accountnumber, int depositAmount)
+    {
+        try (Connection conn = DBUtil.getConnection()) 
+        {
+            String sql = "UPDATE accounts SET balance = balance + ? WHERE account_number = ?";
+            var ps = conn.prepareStatement(sql);
+            ps.setInt(1, depositAmount);
+            ps.setString(2, accountnumber);
+            int updated = ps.executeUpdate();
+            return updated > 0;
+        } 
+        catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }// depositAmount  method  block end
 
-			}// while loop end (for deposit and balance checking)
-		
-	}// main method block end
+  
+    // Validate deposit amount
+    public int ValidateDepositAmount() {
+        Scanner Sc = new Scanner(System.in);
+        int depositAmount = 0;
 
-	private boolean depositAmount(String accountfile, String accountnumber ,String depositAmount ) 
-	{
-	
-		try(BufferedReader reader = new BufferedReader(new FileReader(accountfile)))
-		{
-			StringBuffer fileContent = new StringBuffer();
-			
-			
-			String line;
-			boolean accountFound = false;
-			
-			while((line = reader.readLine()) != null)
-			{
-				String arr[] = line.split(",");
-				
-				if(arr.length >=4 && arr[2].equals(accountnumber))
-				{
-					try
-					{
-					int currentBalance = Integer.parseInt(arr[3]);
-					int newBalance = currentBalance + Integer.parseInt(depositAmount);
-					
-					arr[3] = Integer.toString(newBalance);
-					accountFound = true;
-					}
-					catch(NumberFormatException e)
-					{
-						System.out.println("invalid deposit amount. Please enter a numeric value.");
-						return false;
-					}
-				}
-				fileContent.append(String.join(",", arr)).append("\n");
-			}
-			if(!accountFound)
-			{
-				
-				try (BufferedWriter writer = new BufferedWriter(new FileWriter(accountfile)))
-				{
-					writer.write(fileContent.toString());
-				}
-				return true;
-			}
-				else 
-				{
-					System.out.println("account not found.");
-				}
-		}
-			catch(IOException | NumberFormatException e)
-			{
-				System.out.println(" error");
-			}
-			
-		     return false;
-		
-	}//
+        while (true) {
+            System.out.println("How much do you want to deposit:");
+            String deposit = Sc.nextLine();
 
-	public boolean UserValidationCredantials(String accountfile, String Username, String password,String accountnumber) {
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(accountfile));
-			String line;
+            try {
+                depositAmount = Integer.parseInt(deposit);
+                if (depositAmount > 0) {
+                    break;
+                } else {
+                    System.out.println("Enter a positive amount.");
+                }
+            } 
+            catch (NumberFormatException e) {
+                System.out.println("Enter numeric values only.");
+            }
+        }// inner while loop block end 
+        return depositAmount;
+    }// validatedepositamount method block end 
+    
+}// mian banking class end
 
-			while ((line = reader.readLine()) != null)
-			{
-				String arr[] = line.split(",");
+class DBUtil {
+    public static Connection getConnection() throws SQLException 
+    {
+        String url = "jdbc:mysql://localhost:3306/banking"; 
+        String user = "root"; 
+        String pass = "venkatpurnesh"; 
 
-				if (arr[0].equals(Username) && arr[1].equals(password) && arr[2].equals(accountnumber))
-				{
-					return true;
-				}
-
-			}
-		} catch (FileNotFoundException e) {
-			System.out.println(" Account file not found.");
-			e.printStackTrace();
-		} catch (IOException e) {
-			System.out.println("Error reading the account file.");
-			e.printStackTrace();
-		}
-		return false;
-	}
-	public boolean ValidateDepositAmount()
-	{
-		int depositAmount = 0;
-		boolean isValidAmount = false;
-		
-		while(!isValidAmount)
-		{
-			Scanner Sc = new Scanner(System.in);
-		System.out.println("How much do you want to deposit:");
-		String deposit = Sc.nextLine();
-
-		try {
-			if(deposit.length()>6)
-			{
-			depositAmount = Integer.parseInt(deposit);
-			if(depositAmount <= 0)
-			{
-				System.out.println("please enter a positive number.");
-			}// depositAmount if block end
-			else {
-				
-				isValidAmount = true;
-			}// validatedepositAmount else block end
-			}// validatedeposit.length if block end
-		}
-			catch(NumberFormatException e)
-		{
-			System.out.println("enter only numaric values");
-		} // depositamount try-catch block end
-		}// depositamount while loop end 
-		return true;
-	}// validate depositAmount end 
-}//main class end
-
+        return DriverManager.getConnection(url, user, pass);
+    }
+}
 
 
 
