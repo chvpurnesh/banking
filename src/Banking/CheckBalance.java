@@ -1,31 +1,36 @@
 package Banking;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-public class CheckBalance{
-	
+public class CheckBalance {
 
-	public  String checkBal(String accountnumber,String file) throws NumberFormatException, IOException
-	{
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			 String line;
-			  
-			 while ((line = reader.readLine()) != null)
-			 {
-				
-				String arr[] = line.split(",");
-				if(arr[2].equals(accountnumber))
-				{
-					return arr[3];
-				}
-			 }
-			 return " ";
-			
-	}
-}
+    public String checkBal(String accountnumber)
+    {
+        try (Connection conn = DBUtil.getConnection())
+        {
+            String sql = "SELECT balance FROM accounts WHERE account_number = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, accountnumber);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next())
+            {
+                return String.valueOf(rs.getInt("balance"));
+            } 
+            else {
+                return "Account not found";
+            }
+        }// try block end 
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+            return "Error retrieving balance";
+        }// catch block end
+        
+    }// checkbal method block end
+}// check balance class block end
 
 
 
